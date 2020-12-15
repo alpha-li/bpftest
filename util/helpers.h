@@ -10,7 +10,9 @@
  #define PIN_GLOBAL_NS  2
 
 #define bpf_htons(x) __builtin_bswap16(x)
+#define bpf_ntohs(x) __builtin_bswap16(x)
 #define bpf_htonl(x) __builtin_bswap32(x)
+#define bpf_ntohl(x) __builtin_bswap32(x)
 
  /* ELF map definition */
  struct bpf_elf_map {
@@ -44,9 +46,11 @@
  unsigned long long load_half(void *skb, unsigned long long off)
      asm ("llvm.bpf.load.half");
 
+static int (*bpf_trace_printk)(const char *fmt, int fmt_size,
+                               ...) = (void *)BPF_FUNC_trace_printk;
 
-// #define trace_printk(fmt, ...)                                                 \
-//   do {                                                                         \
-//     char _fmt[] = fmt;                                                         \
-//     bpf_trace_printk(_fmt, sizeof(_fmt), ##__VA_ARGS__);                       \
-//   } while (0)
+#define trace_printk(fmt, ...)                                                 \
+  do {                                                                         \
+    char _fmt[] = fmt;                                                         \
+    bpf_trace_printk(_fmt, sizeof(_fmt), ##__VA_ARGS__);                       \
+  } while (0)

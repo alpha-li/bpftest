@@ -42,11 +42,11 @@ struct EndpointSet
 #define BPF_MAX_RECORD 256
 struct bpf_elf_map __section("maps") service_map = {
     .type = BPF_MAP_TYPE_HASH,
-    .id = BPF_MAP_ID_STATS,
+    //.id = BPF_MAP_ID_STATS,
     .size_key = sizeof(struct Service),
     .size_value = sizeof(struct EndpointSet),
     .max_elem = BPF_MAX_RECORD,
-    .pinning = PIN_GLOBAL_NS,
+    //.pinning = PIN_GLOBAL_NS,
 };
 
 static inline int match_service(struct __sk_buff *skb, __u64 nh_off);
@@ -90,6 +90,8 @@ __section("cls_ingress") int cls_main(struct __sk_buff *skb)
     }
 
     h_proto = eth->h_proto;
+
+    trace_printk("Got Packet!\n");
 
     if (h_proto == bpf_htons(ETH_P_IP))
      {
@@ -149,8 +151,12 @@ static inline  int match_service(struct __sk_buff *skb, __u64 nh_off)
 
     service.dstIp = iph->daddr;
     service.dstPort = tcph->dest;
+    service.pad = 0; //all the fields must be assigned, or verified failed
 
     struct Endpoint ep;
+
+    trace_printk("Got packet! ip:%u port:%u", bpf_ntohl(iph->daddr), bpf_ntohs(tcph->dest));
+    uint32_t a = 10;
 
     struct EndpointSet *eps = bpf_map_lookup_elem(&service_map, &service);
     // if (eps)
