@@ -7,4 +7,4 @@ bpf_lb.o: bpf_lb.c
 
 
 clean:
-	rm *.o -rf
+	rm -rf *.o

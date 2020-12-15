@@ -107,7 +107,8 @@ __section("cls_ingress") int cls_main(struct __sk_buff *skb)
 
 // void get_endpoint(struct EndpointSet *eps, struct Endpoint *ep)
 // {
-//     eps->prev = (eps->prev + 1) % eps->ep_num;
+//     if(eps == 0|| ep == 0|| eps->ep_num == 0||eps->ep_num >= MAX_ENDPOINT_NUM) return;
+//     eps->prev = (eps->prev + 1) % (eps->ep_num);
 //     *ep = eps->endpoints[eps->prev];
 // }
 
@@ -155,19 +156,24 @@ static inline  int match_service(struct __sk_buff *skb, __u64 nh_off)
 
     struct Endpoint ep;
 
-    trace_printk("Got packet! ip:%u port:%u", bpf_ntohl(iph->daddr), bpf_ntohs(tcph->dest));
+    trace_printk("Got packet! ip:%u port:%u\n", bpf_ntohl(iph->daddr), bpf_ntohs(tcph->dest));
     uint32_t a = 10;
 
     struct EndpointSet *eps = bpf_map_lookup_elem(&service_map, &service);
-    // if (eps)
-    // {
-    //     get_endpoint(eps, &ep);
-    // }
+    if (eps == 0 || eps->ep_num == 0)
+    {
+        trace_printk("No Endpoint\n");
+        return 0;
+    }
+
+    //get_endpoint(eps, &ep);
+    
 
     // set_tcp_dport(skb, nh_off, tcph->dest, ep.port);
     // set_dest_ip(skb, nh_off, iph->daddr, ep.ip);
 
     // return 1;
+    return 1;
 }
 
 char __license[] __section("license") = "GPL";
